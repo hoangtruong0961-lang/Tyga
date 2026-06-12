@@ -25,7 +25,7 @@ import { SotaSearchService } from "../search/SotaSearchService";
 
 // Task 3.3 Step 2: History Slicing Constant
 // Default changed from 100 to 40 to optimize token consumption and performance
-const MAX_HISTORY_CONTEXT = 40;
+const MAX_HISTORY_CONTEXT = 300;
 const EMBEDDING_SCHEDULE_INTERVAL = 10;
 
 // Tăng cường chất lượng RAG: Xây dựng truy vấn lai hợp (Composite Search Query) giúp truy xuất ký ức đúng ngữ cảnh kế tiếp
@@ -160,13 +160,13 @@ async function generateIncrementalSummaryForSlicedHistory(
       .join("\n\n");
 
     const prompt = `Bạn là một trợ lý thông minh phụ trách nén bộ nhớ cốt truyện.
-Hãy viết một bản tóm tắt tích lũy siêu ngắn gọn, súc tích (dưới 150 chữ) về các sự kiện chính đã diễn ra trong đoạn hội thoại bị lược bỏ sau đây.
-Bản tóm tắt này sẽ đóng vai trò là ký ức bắc cầu (bridge memory) để mô hình chính hiểu chuyện gì đã xảy ra trước đó.
+Hãy viết một bản tóm tắt tích lũy siêu chi tiết, đầy đủ mọi diễn biến quan trọng đã diễn ra trong đoạn hội thoại bị lược bỏ sau đây. Lưu giữ mọi chi tiết nhỏ nhất.
+Bản tóm tắt này sẽ đóng vai trò là ký ức bắc cầu (bridge memory) để mô hình chính hiểu sâu sắc chuyện gì đã xảy ra trước đó.
 
 Hội thoại bị lược bỏ:
 ${textToSummarize}
 
-Yêu cầu: Chỉ trả về đoạn tóm tắt vắn tắt bằng tiếng Việt, không kèm định dạng hay lời giải thích nào khác.`;
+Yêu cầu: Chỉ trả về đoạn tóm tắt bằng tiếng Việt, rất đầy đủ và chi tiết, không kèm lời giải thích nào khác.`;
 
     let activeProxy = settings.proxies?.find(
       (p) => p.id === settings.activeProxyId,
@@ -186,7 +186,7 @@ Yêu cầu: Chỉ trả về đoạn tóm tắt vắn tắt bằng tiếng Việ
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         temperature: 0.2,
-        maxOutputTokens: 300,
+        maxOutputTokens: 8192,
       }
     });
 
@@ -294,7 +294,7 @@ export const gameplayAiService = {
       // Prepare parallel tasks for optimal latency
       const ragQuery = getCompositeSearchQuery(cleanedInput, history, worldData.entities);
       const similarVectorsPromise = shouldSearchEmbedding
-        ? vectorService.searchSimilarVectors(ragQuery, settings, 10, undefined, campaignId).catch(err => {
+        ? vectorService.searchSimilarVectors(ragQuery, settings, 40, undefined, campaignId).catch(err => {
             console.warn("Vector RAG failed:", err);
             return [];
           })
@@ -303,7 +303,7 @@ export const gameplayAiService = {
       // Dynamic Trained Knowledge Retrieval on EVERY turn
       const shouldQueryTrainedKnowledge = settings.enableVectorMemory;
       const trainedKnowledgePromise = shouldQueryTrainedKnowledge
-        ? vectorService.searchSimilarVectors(ragQuery, settings, 5, 'novel_source').catch(err => {
+        ? vectorService.searchSimilarVectors(ragQuery, settings, 20, 'novel_source').catch(err => {
             console.warn("Trained knowledge context failed:", err);
             return [];
           })
@@ -381,7 +381,7 @@ export const gameplayAiService = {
           })
         : Promise.resolve(null);
 
-      const mem0Promise = Mem0Service.retrieveMem0Context(cleanedInput, campaignId, settings, 8).catch(err => {
+      const mem0Promise = Mem0Service.retrieveMem0Context(cleanedInput, campaignId, settings, 30).catch(err => {
         console.warn("Mem0 context retrieval failed:", err);
         return "";
       });
@@ -411,7 +411,7 @@ export const gameplayAiService = {
 
       // --- STRICT TOKEN BUDGETING & PULL-BASED DYNAMIC RAG (ARK CORE V5) ---
       // 1. Establish the Overall Context Token Budget Limit (Default: 60,000)
-      const contextBudgetTokens = worldData.config.contextConfig?.maxContextTokens || 60000;
+      const contextBudgetTokens = worldData.config.contextConfig?.maxContextTokens || 1000000;
 
       // 2. Compute Strict Sector Tokens allocations:
       // - System Prompt & Character Persona: 15% Max (9,000)
@@ -419,8 +419,8 @@ export const gameplayAiService = {
       // - Recent Chat Log sliding window history: 50% Max (30,000)
       // - Reserve Output Headroom & Input payload buffers: 15% (9,000)
       const systemBudgetTokens = Math.floor(0.15 * contextBudgetTokens);
-      const memoryBudgetTokens = Math.floor(0.20 * contextBudgetTokens);
-      const chatBudgetTokens = Math.floor(0.50 * contextBudgetTokens);
+      const memoryBudgetTokens = Math.floor(0.30 * contextBudgetTokens);
+      const chatBudgetTokens = Math.floor(0.60 * contextBudgetTokens);
 
       // --- COMPRESSION: Clean History (Safe compression only) ---
       // We first create a temporary full history mapping to find recent text mentions
@@ -461,7 +461,7 @@ export const gameplayAiService = {
       }
 
       // Restrict active detailed entities to a tight list of 2 (Always Active limits)
-      const maxEntities = Math.min(2, worldData.config.contextConfig?.maxEntities || 2);
+      const maxEntities = Math.min(20, worldData.config.contextConfig?.maxEntities || 20);
       const limitedEntities = activeEntitiesList.slice(0, maxEntities);
 
       const processedEntities = limitedEntities.map((e) => {
