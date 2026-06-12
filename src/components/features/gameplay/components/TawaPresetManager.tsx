@@ -74,18 +74,9 @@ export function normalizePresetConfig(config: TawaPresetConfig) {
     nsfwMod = config.modules.find(m => m.name?.toLowerCase().includes("auxiliary") || m.name?.toLowerCase().includes("phụ") || m.name?.toLowerCase().includes("nsfw") || m.name?.toLowerCase().includes("secondary"));
   }
 
-  let jbMod = config.modules.find(m => m.identifier === "jailbreak" || m.identifier === "jailbreak_prompt");
-  if (!jbMod) {
-    jbMod = config.modules.find(m => m.name?.toLowerCase().includes("vượt ngục") || m.name?.toLowerCase().includes("jailbreak"));
-  }
-
-  let phMod = config.modules.find(m => m.identifier === "post_history_instructions" || m.identifier === "post_history" || m.identifier === "post-history");
+  let phMod = config.modules.find(m => m.identifier === "post_history_instructions" || m.identifier === "post_history" || m.identifier === "post-history" || m.identifier === "jailbreak" || m.identifier === "jailbreak_prompt");
   if (!phMod) {
-    phMod = config.modules.find(m => m.name?.toLowerCase().includes("post-history") || m.name?.toLowerCase().includes("post_history") || m.name?.toLowerCase().includes("ôn lại") || m.name?.toLowerCase().includes("lược sử") || m.name?.toLowerCase().includes("kết thúc ôn lại") || m.name?.toLowerCase().includes("———❉———"));
-    // Ensure we don't pick the same module for jailbreak and post-history if only one of them exists using names!
-    if (phMod && jbMod && phMod.identifier === jbMod.identifier) {
-      phMod = undefined;
-    }
+    phMod = config.modules.find(m => m.name?.toLowerCase().includes("post-history") || m.name?.toLowerCase().includes("post_history") || m.name?.toLowerCase().includes("ôn lại") || m.name?.toLowerCase().includes("lược sử") || m.name?.toLowerCase().includes("kết thúc ôn lại") || m.name?.toLowerCase().includes("———❉———") || m.name?.toLowerCase().includes("vượt ngục") || m.name?.toLowerCase().includes("jailbreak"));
   }
 
   // Map / unify identifiers
@@ -95,9 +86,6 @@ export function normalizePresetConfig(config: TawaPresetConfig) {
   if (nsfwMod && nsfwMod.identifier !== "nsfw") {
     nsfwMod.identifier = "nsfw";
   }
-  if (jbMod && jbMod.identifier !== "jailbreak") {
-    jbMod.identifier = "jailbreak";
-  }
   if (phMod && phMod.identifier !== "post_history_instructions") {
     phMod.identifier = "post_history_instructions";
   }
@@ -105,8 +93,10 @@ export function normalizePresetConfig(config: TawaPresetConfig) {
   // Sync config values
   config.main_prompt = config.main_prompt || mainMod?.content || "";
   config.nsfw_prompt = config.nsfw_prompt || nsfwMod?.content || "";
-  config.jailbreak_prompt = config.jailbreak_prompt || jbMod?.content || "";
-  config.post_history_instructions = config.post_history_instructions || phMod?.content || "";
+  config.post_history_instructions = config.post_history_instructions || config.jailbreak_prompt || phMod?.content || "";
+  
+  // Clear obsolete jailbreak
+  delete config.jailbreak_prompt;
 
   // Helper to construct a module if absent
   const guaranteeModule = (identifier: string, modName: string, role: "system" | "user" | "assistant", content: string, systemPrompt: boolean, pos = 0) => {
@@ -131,9 +121,6 @@ export function normalizePresetConfig(config: TawaPresetConfig) {
   }
   if (config.nsfw_prompt) {
     guaranteeModule("nsfw", "Auxiliary Prompt (Quy phạm phụ / Thiết lập bổ trợ)", "system", config.nsfw_prompt, true, 0);
-  }
-  if (config.jailbreak_prompt) {
-    guaranteeModule("jailbreak", "Jailbreak Prompt (Chỉ thị Vượt ngục)", "assistant", config.jailbreak_prompt, false, 0);
   }
   if (config.post_history_instructions) {
     guaranteeModule("post_history_instructions", "Post-History Instructions (Chỉ thị Ôn lại)", "system", config.post_history_instructions, true, 1);
@@ -361,7 +348,6 @@ export default function TawaPresetManager({
 
   const mainPromptValue = config.main_prompt || (config.modules?.find(m => m.identifier === "main")?.content || "");
   const nsfwPromptValue = config.nsfw_prompt || (config.modules?.find(m => m.identifier === "nsfw")?.content || "");
-  const jailbreakPromptValue = config.jailbreak_prompt || (config.modules?.find(m => m.identifier === "jailbreak")?.content || "");
   const postHistoryInstructionsValue = config.post_history_instructions || (config.modules?.find(m => m.identifier === "post_history_instructions" || m.identifier === "post_history")?.content || "");
   const assistantPrefillValue = config.assistant_prefill || "";
 
@@ -482,15 +468,13 @@ export default function TawaPresetManager({
   };
 
   // QUICK PROMPTS EDITING HANDLER
-  const handleQuickPromptChange = (field: "main" | "nsfw" | "jailbreak" | "post_history_instructions" | "assistant_prefill", value: string) => {
+  const handleQuickPromptChange = (field: "main" | "nsfw" | "post_history_instructions" | "assistant_prefill", value: string) => {
     updateConfig((prev) => {
       const updated = { ...prev };
       if (field === "main") {
         updated.main_prompt = value;
       } else if (field === "nsfw") {
         updated.nsfw_prompt = value;
-      } else if (field === "jailbreak") {
-        updated.jailbreak_prompt = value;
       } else if (field === "post_history_instructions") {
         updated.post_history_instructions = value;
       } else if (field === "assistant_prefill") {
@@ -513,10 +497,6 @@ export default function TawaPresetManager({
         targetIdentifier = "nsfw";
         defaultName = "Auxiliary Prompt (Quy phạm phụ / Thiết lập bổ trợ)";
         defaultRole = "system";
-      } else if (field === "jailbreak") {
-        targetIdentifier = "jailbreak";
-        defaultName = "Jailbreak Prompt (Chỉ thị Vượt ngục)";
-        defaultRole = "assistant";
       } else if (field === "post_history_instructions") {
         targetIdentifier = "post_history_instructions";
         defaultName = "Post-History Instructions (Chỉ thị Ôn lại cuối Lịch sử)";
@@ -670,14 +650,14 @@ export default function TawaPresetManager({
 
         // Extract and align fields using normalized extraction
         if (importedJson.main_prompt !== undefined) newConfig.main_prompt = importedJson.main_prompt;
-        if (importedJson.jailbreak_prompt !== undefined) newConfig.jailbreak_prompt = importedJson.jailbreak_prompt;
-        else if (importedJson.jailbreak !== undefined) newConfig.jailbreak_prompt = importedJson.jailbreak;
 
         if (importedJson.nsfw_prompt !== undefined) newConfig.nsfw_prompt = importedJson.nsfw_prompt;
         else if (importedJson.nsfw !== undefined) newConfig.nsfw_prompt = importedJson.nsfw;
 
         if (importedJson.post_history_instructions !== undefined) newConfig.post_history_instructions = importedJson.post_history_instructions;
         else if (importedJson.post_history !== undefined) newConfig.post_history_instructions = importedJson.post_history;
+        else if (importedJson.jailbreak_prompt !== undefined) newConfig.post_history_instructions = importedJson.jailbreak_prompt;
+        else if (importedJson.jailbreak !== undefined) newConfig.post_history_instructions = importedJson.jailbreak;
 
         normalizePresetConfig(newConfig);
 
@@ -708,10 +688,10 @@ export default function TawaPresetManager({
         ...DEFAULT_AI_SETTINGS, // Inject default settings if not fully defined
         ...config,
         main_prompt: config.main_prompt || config.modules?.find(m => m.identifier === "main")?.content || "",
-        jailbreak_prompt: config.jailbreak_prompt || config.modules?.find(m => m.identifier === "jailbreak")?.content || "",
         nsfw: config.nsfw_prompt || config.modules?.find(m => m.identifier === "nsfw")?.content || "",
         nsfw_prompt: config.nsfw_prompt || config.modules?.find(m => m.identifier === "nsfw")?.content || "",
         post_history_instructions: config.post_history_instructions || config.modules?.find(m => m.identifier === "post_history_instructions")?.content || "",
+        jailbreak_prompt: config.post_history_instructions || config.modules?.find(m => m.identifier === "post_history_instructions")?.content || "",
         prompts: config.modules,
         prompt_order: [
           {
@@ -1072,30 +1052,14 @@ export default function TawaPresetManager({
                   <div className="flex flex-col gap-2 p-4 bg-slate-800/30 border border-slate-800 rounded-xl">
                     <div className="flex justify-between items-center mb-1">
                       <div>
-                        <h4 className="font-bold text-slate-300">3. Jailbreak Prompt (Chỉ thị Vượt ngục / Phục hồi trạng thái)</h4>
-                        <p className="text-xs text-slate-400">Chỉ thị rũ bỏ rào cản hệ thống và thiết lập phong cách viết (Ví dụ: Định dạng phản hồi ngôi thứ nhất có identifier <strong>jailbreak</strong>), thường được kích hoạt trước phản hồi.</p>
-                      </div>
-                    </div>
-                    <textarea
-                      value={jailbreakPromptValue}
-                      onChange={(e) => handleQuickPromptChange("jailbreak", e.target.value)}
-                      placeholder="Nhập nội dung cho Jailbreak Prompt (Mặc định liên kết với identifier 'jailbreak')..."
-                      rows={10}
-                      className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 outline-none focus:border-mystic-accent/50 font-mono resize-y min-h-[120px]"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2 p-4 bg-slate-800/30 border border-slate-800 rounded-xl">
-                    <div className="flex justify-between items-center mb-1">
-                      <div>
-                        <h4 className="font-bold text-slate-300">4. Post-History Instructions (Chỉ thị Ôn lại cuối Lịch sử)</h4>
-                        <p className="text-xs text-slate-400">Được tiêm trực tiếp vào sau Lịch sử (Post-History, e.g. &quot;———❉———&quot; hoặc nhắc lại bối cảnh có identifier <strong>post_history_instructions</strong>), dùng để duy trì bối cảnh và hướng dẫn phản hồi.</p>
+                        <h4 className="font-bold text-slate-300">3. Post-History Instructions / Jailbreak Prompt (Chỉ thị Cuối Lịch Sử)</h4>
+                        <p className="text-xs text-slate-400">Được tiêm trực tiếp vào sau Lịch sử chat (để khắc phục Context Drift), dùng để duy trì bối cảnh và định hướng phong cách văn học. (Ghi chú: ST sử dụng identifier <strong>jailbreak</strong> cho trường này).</p>
                       </div>
                     </div>
                     <textarea
                       value={postHistoryInstructionsValue}
                       onChange={(e) => handleQuickPromptChange("post_history_instructions", e.target.value)}
-                      placeholder="Nhập nội dung cho Post-History Instructions (Mặc định liên kết với identifier 'post_history_instructions')..."
+                      placeholder="Nhập nội dung cho Post-History Instructions / Jailbreak (Identifier 'post_history_instructions')..."
                       rows={10}
                       className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 outline-none focus:border-mystic-accent/50 font-mono resize-y min-h-[120px]"
                     />
@@ -1104,7 +1068,7 @@ export default function TawaPresetManager({
                   <div className="flex flex-col gap-2 p-4 bg-slate-800/30 border border-slate-800 rounded-xl">
                     <div className="flex justify-between items-center mb-1">
                       <div>
-                        <h4 className="font-bold text-slate-300">5. Assistant Prefill (Tiền thoại phản hồi / Tiền tố Assistant)</h4>
+                        <h4 className="font-bold text-slate-300">4. Assistant Prefill (Tiền thoại phản hồi / Tiền tố Assistant)</h4>
                         <p className="text-xs text-slate-400">Được gửi trực tiếp ở cuối danh sách tin nhắn để bắt buộc AI bắt đầu viết tiếp bằng phần đầu này (Ví dụ: &quot;&lt;thinking&gt;\n&quot; để ép AI suy nghĩ trước). SillyTavern nguyên bản sẽ đẩy tiền tố này sau tất cả các modules.</p>
                       </div>
                     </div>
