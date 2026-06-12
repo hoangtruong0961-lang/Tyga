@@ -577,9 +577,8 @@ export const gameplayAiService = {
         finalHistoryStartIndex = i;
       }
 
-      // Enforce the configure history limit cap as well
-      const maxHistoryCount = worldData.config.contextConfig?.recentHistoryCount || MAX_HISTORY_CONTEXT;
-      finalHistoryStartIndex = Math.max(finalHistoryStartIndex, history.length - maxHistoryCount);
+      // We completely removed the external maxHistoryCount config restriction here.
+      // Maximum memory is derived purely from token budgeting so it remembers infinitely deep if permitted!
 
       const slicedHistory = history.slice(finalHistoryStartIndex).filter(m => !m.isHidden);
 
