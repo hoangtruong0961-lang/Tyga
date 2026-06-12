@@ -40,6 +40,7 @@ const REINFORCEMENT_PROMPTS = [
   "KNOWLEDGE LOGIC DISCIPLINE (CRITICAL): Strictly respect setting rules, limits, prerequisite costs, and power laws in the retrieved Tri Thức (RAG/Trained Knowledge). If resources (e.g., spiritual energy/mana/stamina) are depleted, write logical struggle/failure instead of magic cheats or bypasses.",
   "IMMEDIATE CONTINUITY & OBJECT PERMANENCE (AMNESIA FIX): Read the IMMEDIATELY PRECEDING ASSISTANT MESSAGE. You MUST seamlessly carry over every tiny physical detail into this single next turn. If the character grabbed a sword, they are still holding it! If they were bleeding, they are still bleeding! DO NOT drop the physical context of the last 10 seconds of the story.",
   "LSR STATUS TRACKING (MANDATORY RULE): You MUST update <tableEdit> with realistic Point/Status modifications under Table #2 (Máu/Năng lượng/Health) and Table #3 (Quan hệ/Relationship Meters) ngầm after player's action instead of purely outputting descriptive text. Represent stats creatively (e.g. '80/100', 'Suy yếu', 'Kẻ thù').",
+  "DIALOGUE FORMAT (CRITICAL FORMAT LAW): You MUST strictly use Japanese/Asian corner brackets 「」 for all spoken dialogue (e.g., Tên Nhân Vật: 「Đoạn thoại」) and ﹁﹂ for thoughts. NEVER use standard quotation marks \"\" or “” for dialogue. This is mandatory for the visual novel engine.",
 ];
 
 const INITIAL_REINFORCEMENT_PROMPTS = [
@@ -48,6 +49,7 @@ const INITIAL_REINFORCEMENT_PROMPTS = [
   "CHARACTER INTRODUCTION: Introduce the MC's current situation naturally. Do not summarize their background; show it through their current actions and surroundings.",
   "LSR MANDATORY: You MUST initialize the world state in <tableEdit>. This is the foundation for the entire game. Be precise and thorough.",
   "HOOK THE PLAYER: Write an opening that is impossible to ignore. Create immediate intrigue or a sense of wonder.",
+  "DIALOGUE FORMAT (CRITICAL): You MUST strictly use Japanese/Asian corner brackets 「」 for all spoken dialogue (e.g., Tên: 「Thoại」) and ﹁﹂ for thoughts. NEVER use \"\" or “”.",
 ];
 
 export const getReinforcementInstruction = (turnCount: number = 0) => {

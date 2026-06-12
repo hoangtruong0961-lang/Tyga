@@ -357,6 +357,13 @@ const TawaMessageRenderer: React.FC<TawaMessageRendererProps> = React.memo(
           (match, speakerNameRaw, dialogueText, offset, string) => {
             speakerNameRaw = speakerNameRaw ? speakerNameRaw.trim() : "";
             if (!speakerNameRaw && !dialogueText) return match;
+            
+            // SECURITY RULE: If standard quotes "" or “” are used WITHOUT a speaker name, DO NOT PARSE as a dialogue bubble.
+            // This prevents normal narrative quoted phrases on separate lines from becoming 'Người dẫn chuyện' dialogue bubbles.
+            const isStandardQuote = dialogueText.startsWith('"') || dialogueText.startsWith('“');
+            if (!speakerNameRaw && isStandardQuote) {
+               return match; // Keep as plain text
+            }
 
             const isPC =
               playerName &&
