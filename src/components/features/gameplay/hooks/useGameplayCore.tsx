@@ -1369,6 +1369,19 @@ Yêu cầu định dạng JSON chính xác tuyệt đối sau:
             const currentPresets = dbService.getKeyValueSync("tawa_presets_list_v4");
             if (!currentPresets) {
               const defaultPresetsList = [
+                {
+                  id: "builtin_native_ark",
+                  name: "Native ARK Core (No Preset)",
+                  config: {
+                    temperature: 0.8,
+                    top_p: 1.0,
+                    repetition_penalty: 1.0,
+                    thinking_budget: 16384,
+                    reasoning_effort: "high",
+                    modules: [],
+                    regexScripts: []
+                  }
+                },
                 defaultSavedPreset,
                 parseBuiltinPreset("builtin_tawa_delta", "Tawa Delta Combined丨Mới Nhất", tawaDeltaPresetData),
               ];

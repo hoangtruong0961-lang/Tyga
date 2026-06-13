@@ -238,6 +238,19 @@ export function parseBuiltinPreset(id: string, name: string, data: any): SavedPr
 }
 
 const BUILTIN_PRESETS: SavedPreset[] = [
+  {
+    id: "builtin_native_ark",
+    name: "Native ARK Core (No Preset)",
+    config: {
+      temperature: 0.8,
+      top_p: 1.0,
+      repetition_penalty: 1.0,
+      thinking_budget: 16384,
+      reasoning_effort: "high",
+      modules: [],
+      regexScripts: []
+    }
+  },
   parseBuiltinPreset("builtin_tawa_re_yil", "Tawa Re = YIL丨Alpha V1", tawaReYilPresetData),
   parseBuiltinPreset("builtin_tawa_delta", "Tawa Delta Combined丨Mới Nhất", tawaDeltaPresetData),
 ];

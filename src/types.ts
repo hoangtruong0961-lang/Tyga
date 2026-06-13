@@ -534,6 +534,8 @@ export interface TawaPresetConfig {
   frequency_penalty?: number;
   presence_penalty?: number;
   repetition_penalty?: number;
+  thinking_budget?: number;
+  reasoning_effort?: "low" | "medium" | "high" | "auto" | string;
   openai_max_context?: number;
   openai_max_tokens?: number;
 
