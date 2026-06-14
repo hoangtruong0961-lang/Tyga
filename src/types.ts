@@ -55,7 +55,7 @@ export interface ProxyConfig {
   model: string;
   models: string[];
   isActive: boolean;
-  type?: "openai" | "google" | "openrouter" | "custom";
+  type?: "openai" | "google" | "openrouter" | "deepseek" | "custom";
   lastError?: string;
   failCount?: number;
   lastUsed?: number;

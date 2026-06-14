@@ -673,6 +673,29 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
     });
   };
 
+  const handleLoadDeepSeekPreset = () => {
+    if (!settings) return;
+    const newProxy = {
+      id: `proxy-deepseek-${Date.now()}`,
+      url: "https://api.deepseek.com",
+      key: "",
+      model: "deepseek-chat",
+      models: [
+        "deepseek-chat",
+        "deepseek-reasoner"
+      ],
+      isActive: true,
+      type: "deepseek"
+    };
+    const updatedProxies = [...settings.proxies, newProxy];
+    handleMultipleChanges({
+      proxies: updatedProxies,
+      activeProxyId: newProxy.id,
+      aiModel: newProxy.model,
+      proxyEnabled: true
+    });
+  };
+
   const removeProxy = (id: string) => {
     if (!settings) return;
     const updatedProxies = settings.proxies.filter(p => p.id !== id);
@@ -695,6 +718,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
         if (updates.url !== undefined && updates.type === undefined) {
           const url = updates.url.toLowerCase();
           if (url.includes('openrouter.ai')) newProxy.type = 'openrouter';
+          else if (url.includes('api.deepseek.com')) newProxy.type = 'deepseek';
           else if (url.includes('groq.com') || url.includes('/v1')) newProxy.type = 'openai';
           else newProxy.type = 'google';
         }
@@ -747,8 +771,9 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
         if (settings) {
             // Guess type from URL
             const url = parsed.proxyUrl || parsed.url || '';
-            let type: 'google' | 'openai' | 'openrouter' = 'google';
+            let type: 'google' | 'openai' | 'openrouter' | 'deepseek' | 'custom' = 'google';
             if (url.includes('openrouter.ai')) type = 'openrouter';
+            else if (url.includes('api.deepseek.com')) type = 'deepseek';
             else if (url.includes('groq.com') || url.includes('/v1')) type = 'openai';
 
             const newProxy = {
@@ -797,8 +822,9 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
           const parts = line.split('|').map(p => p.trim());
           if (parts.length >= 2) {
             const url = parts[0];
-            let type: 'google' | 'openai' | 'openrouter' = 'google';
+            let type: 'google' | 'openai' | 'openrouter' | 'deepseek' | 'custom' = 'google';
             if (url.includes('openrouter.ai')) type = 'openrouter';
+            else if (url.includes('api.deepseek.com')) type = 'deepseek';
             else if (url.includes('groq.com') || url.includes('/v1')) type = 'openai';
 
             newProxies.push({
@@ -821,8 +847,9 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
             newProxies.push(currentProxy);
           }
           
-          let type: 'google' | 'openai' | 'openrouter' | 'custom' = 'google';
+          let type: 'google' | 'openai' | 'openrouter' | 'deepseek' | 'custom' = 'google';
           if (line.includes('openrouter.ai')) type = 'openrouter';
+          else if (line.includes('api.deepseek.com')) type = 'deepseek';
           else if (line.includes('groq.com') || line.includes('/v1')) type = 'openai';
 
           currentProxy = {
@@ -1757,6 +1784,14 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
                               </Button>
                               <Button 
                                   variant="ghost"
+                                  className="text-[10px] h-8 px-3 rounded-xl border border-blue-500/60 shadow-[2px_2px_4px_#cbd2df,-2px_-2px_4px_#ffffff] dark:shadow-[2px_2px_4px_#030610,-2px_-2px_4px_#142042] text-blue-600 dark:text-blue-400 bg-[#cbd2df]/10 dark:bg-slate-950/20 disabled:opacity-40 font-extrabold"
+                                  onClick={handleLoadDeepSeekPreset}
+                                  disabled={!settings.proxyEnabled}
+                              >
+                                  <Sparkles className="w-3.5 h-3.5 mr-1 text-blue-500" /> DeepSeek
+                              </Button>
+                              <Button 
+                                  variant="ghost"
                                   className="text-[10px] h-8 px-3 rounded-xl border border-[#cbd2df]/30 dark:border-[#142042]/10 shadow-[2px_2px_4px_#cbd2df,-2px_-2px_4px_#ffffff] dark:shadow-[2px_2px_4px_#030610,-2px_-2px_4px_#142042] text-slate-600 dark:text-slate-400 bg-transparent disabled:opacity-40"
                                   onClick={addProxy}
                                   disabled={!settings.proxyEnabled}
@@ -1885,6 +1920,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
                                                     <option value="google">Google</option>
                                                     <option value="openai">OpenAI</option>
                                                     <option value="openrouter">OpenRouter</option>
+                                                    <option value="deepseek">DeepSeek</option>
                                                 </select>
                                             </label>
                                             <input 

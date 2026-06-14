@@ -243,8 +243,12 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
     activeProxy?.url?.includes('chat/completions')
   );
   
+  const isDeepSeek = activeProxy?.type === 'deepseek' || 
+                     activeProxy?.url?.includes('api.deepseek.com') ||
+                     modelToTest.includes('deepseek');
+
   const effectiveType = (useProxy && activeProxy) 
-    ? (activeProxy.type === 'openai' ? 'openai' : 
+    ? (activeProxy.type === 'openai' || isDeepSeek ? 'openai' : 
        activeProxy.type === 'google' && !isOpenAILikeProxy && isGeminiModel ? 'google' :
        (isOpenAIModel || isKimi || !isGeminiModel || isOpenAILikeProxy) ? 'openai' : 'google')
     : 'google';
@@ -324,6 +328,14 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
           const isThinkingModel = lowerModel.includes('kimi') || lowerModel.includes('thinking') || lowerModel.includes('o1') || lowerModel.includes('o3');
           if (isThinkingModel && (!body.max_tokens || body.max_tokens < 8192)) {
             body.max_tokens = 16384; 
+          }
+
+          const isDeepSeekThinking = lowerModel.includes('deepseek-r1') || lowerModel.includes('deepseek-reasoner');
+          if (isDeepSeekThinking) {
+            delete body.temperature;
+            delete body.top_p;
+            delete body.frequency_penalty;
+            delete body.presence_penalty;
           }
 
           if (config?.responseMimeType === 'application/json') {
@@ -499,6 +511,14 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
           const isThinkingModel = lowerModel.includes('kimi') || lowerModel.includes('thinking') || lowerModel.includes('o1') || lowerModel.includes('o3');
           if (isThinkingModel && (!body.max_tokens || body.max_tokens < 8192)) {
             body.max_tokens = 16384; 
+          }
+
+          const isDeepSeekThinking = lowerModel.includes('deepseek-r1') || lowerModel.includes('deepseek-reasoner');
+          if (isDeepSeekThinking) {
+            delete body.temperature;
+            delete body.top_p;
+            delete body.frequency_penalty;
+            delete body.presence_penalty;
           }
 
           if (config?.responseMimeType === 'application/json') {
