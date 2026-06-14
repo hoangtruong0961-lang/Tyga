@@ -37,6 +37,8 @@ import { CharacterLibraryScreen } from './CharacterLibraryScreen';
 import { ArkLogo } from '../../ui/ArkLogo';
 import { CHANGELOG_DATA } from '../../../data/changelog';
 
+import { AnimatedBackground } from './AnimatedBackground';
+
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -82,6 +84,8 @@ const MainMenuScreen: React.FC<NavigationProps> = ({ onNavigate, onGameStart }) 
   const [infoActiveTab, setInfoActiveTab] = useState<'info' | 'changelog'>('info');
   const [showDonateModal, setShowDonateModal] = useState(false);
   const [saveList, setSaveList] = useState<SaveFile[]>([]);
+  const manualSaves = saveList.filter(s => !s.isAutosave);
+  const autoSaves = saveList.filter(s => s.isAutosave);
   const [activeSaveTab, setActiveSaveTab] = useState<'manual' | 'autosave'>('manual');
   
   // Toast State (Auto Dismiss)
@@ -405,230 +409,69 @@ const MainMenuScreen: React.FC<NavigationProps> = ({ onNavigate, onGameStart }) 
       const turnCount = save.data?.savedState?.turnCount || 0;
       const playerName = save.data?.player?.name;
 
-      return (
-        <div 
-          key={save.id} 
-          className="group flex flex-col md:flex-row md:justify-between md:items-center bg-[#e6ebf4] dark:bg-[#0b1329] border border-[#cbd2df]/10 dark:border-[#142042]/5 p-5 rounded-2xl shadow-[4px_4px_8px_#cbd2df,-4px_-4px_8px_#ffffff] dark:shadow-[4px_4px_8px_#030610,-4px_-4px_8px_#142042] hover:shadow-[2px_2px_4px_#cbd2df,-2px_-2px_4px_#ffffff] dark:hover:shadow-[2px_2px_4px_#030610,-2px_-2px_4px_#142042] transition-all gap-4"
-        >
-            <div className="flex items-start gap-4">
-                <div className="p-3.5 bg-[#e6ebf4] dark:bg-[#0b1329] shadow-[inset_2.5px_2.5px_5px_#cbd2df,inset_-2.5px_-2.5px_5px_#ffffff] dark:shadow-[inset_2.5px_2.5px_5px_#030610,inset_-2.5px_-2.5px_5px_#142042] rounded-xl text-slate-400 dark:text-slate-500">
-                    <Database size={20} className="text-mystic-accent" />
-                </div>
-                <div className="flex-1">
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 group-hover:text-mystic-accent transition-colors text-sm md:text-base tracking-wide">
-                        {save.name}
-                    </h4>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
-                        <span className="flex items-center gap-1.5 bg-[#cbd2df]/30 dark:bg-[#142042]/35 px-2.5 py-0.5 rounded-lg"><Clock size={11}/> {new Date(save.updatedAt).toLocaleString()}</span>
-                        <span className="flex items-center gap-1.5 bg-[#cbd2df]/30 dark:bg-[#142042]/35 px-2.5 py-0.5 rounded-lg"><RotateCcw size={11}/> Lượt: {turnCount}</span>
-                    </div>
-                    {playerName && (
-                        <div className="text-[10px] md:text-xs text-slate-500 dark:text-slate-450 mt-1.5 font-bold uppercase tracking-wider">
-                            Người chơi: {playerName}
-                        </div>
-                    )}
-                </div>
-            </div>
-            
-            <div className="flex gap-3 items-center w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-[#cbd2df]/20 dark:border-[#142042]/10">
-                <button 
-                  onClick={() => handleLoadSave(save)}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-br from-[#0ea5e9] to-[#0284c7] text-white rounded-xl hover:scale-105 transition-all text-xs font-black uppercase tracking-widest cursor-pointer shadow-[0_4px_12px_rgba(14,165,233,0.25)]"
-                >
-                    <Play size={13} className="fill-white" />
-                    <span>Tải Game</span>
-                </button>
-                <div className="flex gap-2">
-                    <button 
-                      onClick={(e) => handleDownloadClick(e, save)}
-                      className="p-2.5 bg-[#e6ebf4] dark:bg-[#0b1329] text-emerald-600 dark:text-emerald-400 shadow-[3px_3px_6px_#cbd2df,-3px_-3px_6px_#ffffff] dark:shadow-[3px_3px_6px_#030610,-3px_-3px_6px_#142042] active:shadow-[inset_2px_2px_4px_#cbd2df,inset_-2px_-2px_4px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#030610,inset_-2px_-2px_4px_#142042] rounded-xl hover:scale-105 transition-all border border-transparent cursor-pointer"
-                      title="Tải xuống tệp lưu"
-                    >
-                        <Download size={15} />
-                    </button>
-                    <button 
-                      onClick={(e) => handleDeleteClick(e, save.id)}
-                      className="p-2.5 bg-[#e6ebf4] dark:bg-[#0b1329] text-red-500 shadow-[3px_3px_6px_#cbd2df,-3px_-3px_6px_#ffffff] dark:shadow-[3px_3px_6px_#030610,-3px_-3px_6px_#142042] active:shadow-[inset_2px_2px_4px_#cbd2df,inset_-2px_-2px_4px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#030610,inset_-2px_-2px_4px_#142042] rounded-xl hover:scale-105 transition-all border border-transparent cursor-pointer"
-                      title="Xóa tệp lưu"
-                    >
-                        <Trash2 size={15} />
-                    </button>
-                </div>
-            </div>
-        </div>
+  return (
+          <div key={save.id} className="p-4 bg-white/5 border border-white/10 rounded-xl mb-3 flex items-center justify-between hover:bg-white/10 cursor-pointer transition-colors" onClick={() => handleLoadSave(save)}>
+              <div className="flex flex-col">
+                  <span className="text-white font-bold">{save.data?.world?.worldName || 'Unknown World'}</span>
+                  <span className="text-white/50 text-xs">Player: {playerName} | Turns: {turnCount}</span>
+                  <span className="text-white/30 text-[10px] mt-1">{new Date(save.updatedAt).toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                  <button onClick={(e) => handleDownloadClick(e, save)} className="p-2 bg-sky-500/20 text-sky-400 rounded-lg"><DownloadCloud size={16} /></button>
+                  <button onClick={(e) => handleDeleteClick(e, save.id)} className="p-2 bg-rose-500/20 text-rose-400 rounded-lg"><Trash2 size={16} /></button>
+              </div>
+          </div>
       );
   };
-
-  const manualSaves = saveList.filter(s => !s.id.startsWith('autosave-'));
-  const autoSaves = saveList.filter(s => s.id.startsWith('autosave-'));
-
   return (
-    <div className="flex flex-col h-full w-full relative overflow-hidden bg-[#e6ebf4] dark:bg-[#0b1329] text-slate-800 dark:text-slate-200">
-      {/* Background custom layer only if uploaded by user locally */}
-      {bgImage && !bgImage.startsWith("http") && (
-        <div 
-          className="absolute inset-0 z-0 transition-all duration-700 pointer-events-none"
-          style={{ 
-            backgroundImage: `url(${bgImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: `brightness(0.35) ${bgBlur ? 'blur(8px)' : 'blur(0px)'}`
-          }}
-        />
-      )}
+    <div className="flex relative h-full w-full overflow-hidden bg-black text-white">
+      {/* Menu Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-black">
+        {bgImage && !bgImage.includes('ark_logo') ? (
+          <div 
+            className="absolute inset-0"
+            style={{ 
+              backgroundImage: `url(${bgImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              filter: 'brightness(0.35)'
+            }}
+          />
+        ) : (
+          <AnimatedBackground />
+        )}
+      </div>
 
-      {/* Button đổi theme đẩy top bên trái trên cùng kèm Dropdown */}
-      {!isIntroing && (
-        <div className="absolute top-4 left-4 md:top-6 md:left-6 z-50">
-          <button 
-            onClick={() => setShowThemeDropdown(!showThemeDropdown)}
-            aria-label="Chọn Theme"
-            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 cursor-pointer ${
-              theme === 'light' || theme === 'pastel' || theme === 'clay'
-                ? 'bg-[#e6ebf4] shadow-[4px_4px_8px_#cbd2df,-4px_-4px_8px_#ffffff] hover:shadow-[inset_2px_2px_4px_#cbd2df,inset_-2px_-2px_4px_#ffffff] text-slate-700'
-                : 'bg-[#0b1329] shadow-[4px_4px_8px_#030610,-4px_-4px_8px_#142042] hover:shadow-[inset_2px_2px_4px_#030610,inset_-2px_-2px_4px_#142042] text-amber-500'
-            }`}
-          >
-            {useCustomTheme ? (
-              <Palette size={20} className="text-violet-500 animate-pulse" />
-            ) : theme === 'pastel' ? (
-              <Palette size={20} className="text-pink-400" />
-            ) : theme === 'clay' ? (
-              <Palette size={20} className="text-orange-400" />
-            ) : theme === 'light' ? (
-              <Moon size={20} className="text-zinc-700" />
-            ) : (
-              <Sun size={20} className="text-amber-400" />
-            )}
-          </button>
-
-          <AnimatePresence>
-            {showThemeDropdown && (
-              <>
-                <div 
-                  className="fixed inset-0 z-40 bg-transparent cursor-default"
-                  onClick={() => setShowThemeDropdown(false)}
-                />
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className={`absolute top-14 left-0 z-50 w-64 p-3 rounded-2xl flex flex-col gap-1.5 shadow-xl border cursor-default ${
-                    theme === 'light' || theme === 'pastel' || theme === 'clay'
-                      ? 'bg-[#e6ebf4] border-white/50 text-slate-800 shadow-[#0000000d]'
-                      : 'bg-[#0b1329] border-white/5 text-slate-100 shadow-[#0000004d]'
-                  }`}
-                >
-                  <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wider opacity-60 text-left">
-                    Theme Mặc Định
-                  </div>
-
-                  {[
-                    { id: 'light', name: 'Nền Sáng (Light Theme)', icon: Sun, color: 'text-yellow-500' },
-                    { id: 'dark', name: 'Nền Tối (Dark Theme)', icon: Moon, color: 'text-amber-400' },
-                    { id: 'pastel', name: 'Pastel / Kem Cát Ấm', icon: Palette, color: 'text-emerald-400' },
-                    { id: 'clay', name: 'Clay / Earthy trầm', icon: Paintbrush, color: 'text-orange-400' }
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    const isActive = !useCustomTheme && theme === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setUseCustomTheme(false);
-                          setTheme(item.id as any);
-                          setShowThemeDropdown(false);
-                        }}
-                        className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer ${
-                          isActive ? 'font-semibold bg-black/5 dark:bg-white/10' : ''
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Icon size={16} className={item.color} />
-                          <span>{item.name}</span>
-                        </div>
-                        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-                      </button>
-                    );
-                  })}
-
-                  {/* Custom themes group */}
-                  {customThemes.length > 0 && (
-                    <>
-                      <div className="border-t border-black/10 dark:border-white/10 my-1" />
-                      <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wider opacity-60 text-left">
-                        Theme Tùy Chỉnh
-                      </div>
-                      {customThemes.map((ct) => {
-                        const isActive = useCustomTheme && activeCustomThemeId === ct.id;
-                        return (
-                          <button
-                            key={ct.id}
-                            onClick={async () => {
-                              setUseCustomTheme(true);
-                              setActiveCustomThemeId(ct.id);
-                              try {
-                                const s = await dbService.getSettings();
-                                await dbService.saveSettings({ ...s, useCustomTheme: true, activeCustomThemeId: ct.id });
-                              } catch (err) {
-                                console.error(err);
-                              }
-                              setShowThemeDropdown(false);
-                            }}
-                            className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer ${
-                              isActive ? 'font-semibold bg-black/5 dark:bg-white/10' : ''
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <div 
-                                className="w-3.5 h-3.5 rounded-full border border-black/10 dark:border-white/10 shadow-sm"
-                                style={{ backgroundColor: ct.primaryColor }}
-                              />
-                              <span className="truncate max-w-[150px]">{ct.name}</span>
-                            </div>
-                            {isActive && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-                          </button>
-                        );
-                      })}
-                    </>
-                  )}
-
-                  <div className="border-t border-black/10 dark:border-white/10 my-1" />
-
-                  {/* Create Custom Theme Trigger */}
-                  <button
-                    onClick={() => {
-                      setShowThemeDropdown(false);
-                      onNavigate(GameState.SETTINGS, 'custom-theme');
-                    }}
-                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer text-sky-500 dark:text-sky-400 font-medium"
-                  >
-                    <Paintbrush size={16} />
-                    <span>Tạo Theme Mới</span>
-                  </button>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-
-      {/* Cài đặt App đẩy top bên phải trên cùng */}
-      {!isIntroing && isInstallable && (
-        <button 
-          onClick={handleInstallClick}
-          className={`absolute top-4 right-4 md:top-6 md:right-6 z-50 px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-300 active:scale-95 cursor-pointer text-sky-500 hover:text-sky-600 ${
-            theme === 'light'
-              ? 'bg-[#e6ebf4] shadow-[4px_4px_8px_#cbd2df,-4px_-4px_8px_#ffffff] hover:shadow-[inset_2px_2px_4px_#cbd2df,inset_-2px_-2px_4px_#ffffff]'
-              : 'bg-[#0b1329] shadow-[4px_4px_8px_#030610,-4px_-4px_8px_#142042] hover:shadow-[inset_2px_2px_4px_#030610,inset_-2px_-2px_4px_#142042]'
-          }`}
-          title="Cài đặt Ứng dụng"
-        >
-          <DownloadCloud size={16} />
-          <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">Cài Đặt App</span>
-        </button>
-      )}
+      {/* Intro Overlay */}
+      <AnimatePresence>
+        {isIntroing && (
+           <motion.div 
+             className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black transition-colors duration-500"
+             initial={{ opacity: 1 }}
+             exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
+           >
+             <motion.div 
+               initial={{ scale: 0.85, opacity: 0, y: 15 }}
+               animate={{ scale: 1, opacity: 1, y: 0 }}
+               exit={{ scale: 1.05, opacity: 0, y: -15 }}
+               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+               className="flex flex-col items-center justify-center gap-7"
+             >
+               <motion.div 
+                 layoutId="ark-main-logo" 
+                 className="text-white"
+                 animate={{ y: [0, -4, 0] }}
+                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+               >
+                 <ArkLogo size={140} />
+               </motion.div>
+               <h2 className="font-serif text-sm font-extrabold text-white/80 tracking-[0.4em] select-none uppercase">
+                 LOADING...
+               </h2>
+             </motion.div>
+           </motion.div>
+        )}
+      </AnimatePresence>
 
       <input 
         type="file" 
@@ -639,391 +482,117 @@ const MainMenuScreen: React.FC<NavigationProps> = ({ onNavigate, onGameStart }) 
         className="hidden" 
       />
 
-      {/* Intro Loading Screen Overlay */}
-      <AnimatePresence>
-        {isIntroing && (
-          <motion.div 
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#e6ebf4] dark:bg-[#0b1329] transition-colors duration-500"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
-          >
-            {/* Neumorphic Loading Panel Card */}
-            <motion.div 
-              initial={{ scale: 0.85, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 1.05, opacity: 0, y: -15 }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="w-[325px] p-10 rounded-[40px] bg-gradient-to-br from-[#eae7e4] to-[#c3beba] dark:from-[#0e182e] dark:to-[#04060c] shadow-[12px_12px_24px_rgba(176,171,168,0.7),-12px_-12px_24px_rgba(255,255,255,0.95)] dark:shadow-[14px_14px_28px_rgba(1,3,7,0.9),-14px_-14px_28px_rgba(21,33,59,0.8)] border border-white/40 dark:border-white/5 flex flex-col items-center justify-center gap-7 transition-colors duration-500"
-            >
-              <motion.div 
-                layoutId="ark-main-logo" 
-                className="text-mystic-accent"
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <ArkLogo size={140} />
-              </motion.div>
-              
-              <div className="flex flex-col items-center gap-5">
-                <h2 className="font-serif text-sm font-extrabold text-[#584964]/80 dark:text-[#a0afca]/90 tracking-[0.4em] select-none uppercase">
-                  LOADING...
-                </h2>
-                
-                {/* Neumorphic Circular Rotating Loader Track */}
-                <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[#c3beba] to-[#eae7e4] dark:from-[#03050a] dark:to-[#101c34] shadow-[inset_3px_3px_6px_rgba(176,171,168,0.75),inset_-3px_-3px_6px_rgba(255,255,255,0.95)] dark:shadow-[inset_3px_3px_8px_rgba(1,3,7,0.95),inset_-3px_-3px_8px_rgba(21,33,59,0.8)] border border-black/5 dark:border-white/5 flex items-center justify-center">
-                  
-                  {/* Primary clockwise glowing spin arc */}
-                  <motion.div
-                    className="absolute w-[80%] h-[80%] rounded-full border-2 border-transparent border-t-sky-500 dark:border-t-sky-400 border-r-sky-500/30 dark:border-r-sky-400/30"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-                  />
-                  
-                  {/* Secondary counter-clockwise accent spin arc */}
-                  <motion.div
-                    className="absolute w-[55%] h-[55%] rounded-full border-2 border-transparent border-b-sky-500/60 dark:border-b-sky-300/40 border-l-sky-500/20 dark:border-l-sky-300/20"
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Main Layout Area */}
+      <div className={`relative z-10 w-full md:w-[600px] h-full flex flex-col p-6 md:p-8 transition-opacity duration-1000 ${isIntroing ? 'opacity-0' : 'opacity-100'} overflow-y-auto custom-scrollbar md:mr-auto justify-start items-center md:items-start`}>
+        
+        {/* Soft Fading Backdrop Layer */}
+        <div className="absolute inset-0 -z-10 bg-[#020617]/50 backdrop-blur-[40px] [mask-image:linear-gradient(to_right,black_50%,transparent_100%)] pointer-events-none" />
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden relative z-10 custom-scrollbar">
-        <div className={`min-h-full flex flex-col items-center justify-center p-4 py-8 md:p-8 z-10 w-full transition-opacity duration-1000 ${isIntroing ? 'opacity-0' : 'opacity-100'}`}>
-          {/* Menu Items array generation inside closure */}
+        {/* Inner Content Wrapper to keep items constrained */}
+        <div className="w-full md:w-[420px] flex flex-col items-center md:items-start relative z-10">
+        
+        {/* Top Header */}
+        <div className="flex flex-col items-center md:items-start text-center md:text-left mt-4 w-full">
+            <div className="flex items-center gap-3">
+              <ArkLogo size={42} className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+              <h1 className="font-serif text-3xl sm:text-4xl font-black tracking-[0.2em] text-white">
+                ARK
+              </h1>
+            </div>
+            <div className="mt-2 text-white/90 font-bold uppercase tracking-widest text-sm">ARK System Core</div>
+            <div className="text-[10px] text-white/60 tracking-wider font-mono mt-1 w-full flex items-center justify-center md:justify-start gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              CORE ONLINE - V8.0.0
+            </div>
+        </div>
+
+        <div className="w-full h-px bg-white/20 my-8 shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
+
+        {/* Menu Items */}
+        <div className="flex flex-col gap-2 w-full flex-1">
           {(() => {
             const menuItems = [
-              {
-                id: 'start',
-                title: 'Khởi Tạo',
-                desc: 'Bắt đầu hành trình mới với thế giới riêng',
-                icon: Play,
-                iconColor: 'text-sky-500 dark:text-sky-400',
-                bgColor: 'bg-sky-500/10',
-                onClick: () => onNavigate(GameState.WORLD_CREATION)
-              },
-              {
-                id: 'continue',
-                title: 'Tiếp Tục',
-                desc: 'Tiếp tục cuộc chơi đang dở',
-                icon: Clock,
-                iconColor: 'text-amber-500 dark:text-amber-400',
-                bgColor: 'bg-amber-500/10',
-                disabled: !hasSaves,
-                onClick: handleContinue
-              },
-              {
-                id: 'data',
-                title: 'Dữ Liệu',
-                desc: 'Quản lý File Save và sao lưu hệ thống',
-                icon: Database,
-                iconColor: 'text-emerald-500 dark:text-emerald-400',
-                bgColor: 'bg-emerald-500/10',
-                onClick: handleOpenLoadGame
-              },
-              {
-                id: 'fanfic',
-                title: 'Đồng Nhân',
-                desc: 'Sáng tác truyện và fanfic cùng AI',
-                icon: FileText,
-                iconColor: 'text-violet-500 dark:text-violet-400',
-                bgColor: 'bg-violet-500/10',
-                onClick: () => onNavigate(GameState.FANFIC)
-              },
-              {
-                id: 'train',
-                title: 'Train Data',
-                desc: 'Nhập dữ liệu văn bản TXT & Knowledge',
-                icon: Upload,
-                iconColor: 'text-rose-500 dark:text-rose-400',
-                bgColor: 'bg-rose-500/10',
-                onClick: () => onNavigate(GameState.KNOWLEDGE_TRAIN)
-              },
-              {
-                id: 'sillytavern',
-                title: 'Thư Viện ST',
-                desc: 'Nhập & quản lý Nhân vật Thẻ SillyTavern',
-                icon: Users,
-                iconColor: 'text-indigo-500 dark:text-indigo-400',
-                bgColor: 'bg-indigo-500/10',
-                onClick: () => setShowCharacterLibrary(true)
-              },
-              {
-                id: 'schema',
-                title: 'Bản Sơ Đồ',
-                desc: 'Thiết kế cấu trúc thuộc tính nhân vật custom',
-                icon: Tags,
-                iconColor: 'text-yellow-500 dark:text-yellow-400',
-                bgColor: 'bg-yellow-500/10',
-                onClick: () => onNavigate(GameState.SCHEMA_DESIGNER)
-              },
-              {
-                id: 'settings',
-                title: 'Cấu Hình',
-                desc: 'Thiết lập mô hình AI, API Key và giao diện',
-                icon: Settings,
-                iconColor: 'text-orange-500 dark:text-orange-400',
-                bgColor: 'bg-orange-500/10',
-                onClick: () => onNavigate(GameState.SETTINGS)
-              },
-              {
-                id: 'info',
-                title: 'Thông Tin',
-                desc: 'Xem thông tin chi tiết phiên bản dựng',
-                icon: Info,
-                iconColor: 'text-cyan-500 dark:text-cyan-400',
-                bgColor: 'bg-cyan-500/10',
-                onClick: () => setShowInfoModal(true)
-              },
-              {
-                id: 'discord',
-                title: 'Discord',
-                desc: 'Kênh cộng đồng kết nối người chơi',
-                icon: MessageCircle,
-                iconColor: 'text-[#5865F2]',
-                bgColor: 'bg-[#5865F2]/10',
-                isLink: true,
-                href: 'https://discord.gg/sPq3Y37eR7'
-              },
-              {
-                id: 'donate',
-                title: 'Ủng Hộ (Donate)',
-                desc: 'Ủng hộ Bạch Phát Dược Thiên Tôn',
-                icon: Heart,
-                iconColor: 'text-rose-500',
-                bgColor: 'bg-rose-500/10',
-                onClick: () => setShowDonateModal(true),
-                isFeatured: true
-              }
+              { id: 'start', title: 'Khởi Tạo', icon: Play, onClick: () => onNavigate(GameState.WORLD_CREATION) },
+              { id: 'continue', title: 'Tiếp Tục', icon: Clock, disabled: !hasSaves, onClick: handleContinue },
+              { id: 'data', title: 'Dữ Liệu', icon: Database, onClick: handleOpenLoadGame },
+              { id: 'fanfic', title: 'Đồng Nhân', icon: FileText, onClick: () => onNavigate(GameState.FANFIC) },
+              { id: 'train', title: 'Train Data', icon: Upload, onClick: () => onNavigate(GameState.KNOWLEDGE_TRAIN) },
+              { id: 'sillytavern', title: 'Thư Viện ST', icon: Users, onClick: () => setShowCharacterLibrary(true) },
+              { id: 'schema', title: 'Bản Sơ Đồ', icon: Tags, onClick: () => onNavigate(GameState.SCHEMA_DESIGNER) },
+              { id: 'settings', title: 'Cấu Hình', icon: Settings, onClick: () => onNavigate(GameState.SETTINGS) },
+              { id: 'info', title: 'Thông Tin', icon: Info, onClick: () => setShowInfoModal(true) },
+              { id: 'discord', title: 'Discord', icon: MessageCircle, isLink: true, href: 'https://discord.gg/sPq3Y37eR7' },
+              { id: 'donate', title: 'Ủng Hộ (Donate)', icon: Heart, onClick: () => setShowDonateModal(true), isFeatured: true }
             ];
 
-            return (
-              <div className="w-full max-w-4xl flex flex-col gap-6 relative z-10 px-2 sm:px-4">
-                
-                {/* TOP HEADER SECTION (TRANSPARENT, NO UI CARD BOX WRAPPER/SHADOW/BORDER) */}
-                <div className="w-full flex flex-col items-center justify-center p-2 mt-4 select-none">
-                  <div className="flex items-center gap-4 sm:gap-5">
-                    {/* App Logo: Moon for dark theme, Sun for light theme, bigger size with glow */}
-                    {theme === 'light' ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                        className="flex items-center justify-center"
-                      >
-                        <Sun className="w-14 h-14 md:w-16 md:h-16 text-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.55)]" />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        animate={{ 
-                          scale: [1, 1.05, 1],
-                          rotate: [0, 4, -4, 0]
-                        }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        className="flex items-center justify-center"
-                      >
-                        <Moon className="w-14 h-14 md:w-16 md:h-16 text-sky-400 drop-shadow-[0_0_20px_rgba(56,189,248,0.6)]" />
-                      </motion.div>
-                    )}
-                    
-                    {/* The word ARK - clean display with no boxed styling */}
-                    <h1 className="font-serif text-3xl sm:text-5xl font-black tracking-[0.25em] text-slate-800 dark:text-gray-100 transition-colors drop-shadow-sm">
-                      ARK
-                    </h1>
+            return menuItems.map(item => {
+              const IconComponent = item.icon;
+              
+              if (item.id === 'continue' && !hasSaves) {
+                return (
+                  <div key={item.id} className="group flex items-center p-3 rounded-xl opacity-40 cursor-not-allowed">
+                    <IconComponent size={20} className="text-white/50 mr-4" />
+                    <span className="font-bold text-sm uppercase tracking-widest text-white/50">{item.title}</span>
                   </div>
-                </div>
+                );
+              }
 
-                {/* MAIN WRAPPER UI (BỌC LỚN) - CONTAINS ONLY THE MAIN MENU ELEMENTS GRID */}
-                <motion.div
-                  variants={containerVariants}
-                  initial={isIntroing ? "hidden" : "visible"}
-                  animate={isIntroing ? "hidden" : "visible"}
-                  className={`w-full p-6 sm:p-8 md:p-10 rounded-3xl transition-all duration-500 flex flex-col gap-6 ${
-                    theme === 'light'
-                      ? 'bg-[#e6ebf4] shadow-[16px_16px_32px_#cbd2df,-16px_-16px_32px_#ffffff] border border-white/40'
-                      : 'bg-[#0b1329] shadow-[16px_16px_32px_#030610,-16px_-16px_32px_#142042] border border-[#1e2a4a]/20'
-                  }`}
+              if (item.isLink) {
+                return (
+                  <motion.a
+                    key={item.id}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ x: 5 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="group flex items-center p-3 rounded-xl transition-all duration-200 hover:bg-white/10 cursor-pointer"
+                  >
+                    <IconComponent size={20} className="text-white mr-4" />
+                    <span className="font-bold text-sm uppercase tracking-widest text-white">{item.title}</span>
+                  </motion.a>
+                );
+              }
+
+              return (
+                <motion.button
+                  key={item.id}
+                  onClick={item.onClick}
+                  whileHover={{ x: 5 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group flex items-center p-3 rounded-xl transition-all duration-200 hover:bg-white/10 cursor-pointer w-full text-left"
                 >
-                  {/* Menu Items Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 relative z-10 w-full mx-auto">
-                    {menuItems.map(item => {
-                      const IconComponent = item.icon;
-                      
-                      if (item.id === 'continue' && !hasSaves) {
-                        return (
-                          <div
-                            key={item.id}
-                            className={`group flex items-center justify-between p-4 rounded-2xl opacity-40 cursor-not-allowed border border-transparent ${
-                              theme === 'light'
-                                ? 'bg-[#e6ebf4]/50 shadow-[inset_2px_2px_5px_rgba(203,210,223,0.5)]'
-                                : 'bg-[#0b1329]/50 shadow-[inset_2px_2px_5px_rgba(3,6,16,0.5)]'
-                            }`}
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center bg-transparent border border-slate-400/20">
-                                <IconComponent size={20} className="text-slate-400" />
-                              </div>
-                              <div className="text-left flex flex-col">
-                                <span className="font-bold text-sm sm:text-base text-slate-500 uppercase tracking-widest">
-                                  {item.title}
-                                </span>
-                                <span className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">
-                                  {item.desc}
-                                </span>
-                              </div>
-                            </div>
-                            <ChevronRight size={16} className="text-slate-400/50" />
-                          </div>
-                        );
-                      }
-
-                      if (item.isLink) {
-                        return (
-                          <motion.a
-                            key={item.id}
-                            href={item.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            variants={itemVariants}
-                            whileHover={{ y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={`group flex items-center justify-between p-4 rounded-2xl transition-all duration-300 border border-transparent ${
-                              theme === 'light'
-                                ? 'bg-[#e6ebf4] shadow-[5px_5px_10px_#cbd2df,-5px_-5px_10px_#ffffff] hover:shadow-[6px_6px_12px_#cbd2df,-6px_-6px_12px_#ffffff] active:shadow-[inset_3px_3px_6px_#cbd2df,inset_-3px_-3px_6px_#ffffff]'
-                                : 'bg-[#0b1329] shadow-[5px_5px_10px_#030610,-5px_-5px_10px_#142042] hover:shadow-[6px_6px_12px_#030610,-6px_-6px_12px_#142042] active:shadow-[inset_3px_3px_6px_#030610,inset_-3px_-3px_6px_#142042]'
-                            }`}
-                          >
-                            <div className="flex items-center gap-4">
-                              {/* Icon wrapped in structural inset */}
-                              <div className={`w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center transition-all bg-[#e6ebf4] dark:bg-[#0b1329] shadow-[inset_3px_3px_6px_#cbd2df,inset_-3px_-3px_6px_#ffffff] dark:shadow-[inset_3px_3px_6px_#030610,inset_-3px_-3px_6px_#142042]`}>
-                                <IconComponent size={20} className={item.iconColor} />
-                              </div>
-                              <div className="text-left flex flex-col">
-                                <span className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 uppercase tracking-widest">
-                                  {item.title}
-                                </span>
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-tight font-medium">
-                                  {item.desc}
-                                </span>
-                              </div>
-                            </div>
-                            <ChevronRight size={16} className="text-slate-400 dark:text-slate-500 group-hover:translate-x-1 transition-transform ml-2" />
-                          </motion.a>
-                        );
-                      }
-
-                      return (
-                        <motion.button
-                          key={item.id}
-                          onClick={item.onClick}
-                          variants={itemVariants}
-                          whileHover={{ y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          className={`group flex items-center justify-between p-4 rounded-2xl transition-all duration-350 cursor-pointer border border-transparent ${
-                            theme === 'light'
-                              ? 'bg-[#e6ebf4] shadow-[5px_5px_10px_#cbd2df,-5px_-5px_10px_#ffffff] hover:shadow-[6px_6px_12px_#cbd2df,-6px_-6px_12px_#ffffff] active:shadow-[inset_3px_3px_6px_#cbd2df,inset_-3px_-3px_6px_#ffffff]'
-                              : 'bg-[#0b1329] shadow-[5px_5px_10px_#030610,-5px_-5px_10px_#142042] hover:shadow-[6px_6px_12px_#030610,-6px_-6px_12px_#142042] active:shadow-[inset_3px_3px_6px_#030610,inset_-3px_-3px_6px_#142042]'
-                          } ${item.isFeatured ? 'col-span-1 md:col-span-2 lg:col-span-3 border-dashed border-rose-500/20' : ''}`}
-                        >
-                          <div className="flex items-center gap-4">
-                            {/* Icon wrapped in structural inset */}
-                            <div className={`w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center transition-all bg-[#e6ebf4] dark:bg-[#0b1329] shadow-[inset_3px_3px_6px_#cbd2df,inset_-3px_-3px_6px_#ffffff] dark:shadow-[inset_3px_3px_6px_#030610,inset_-3px_-3px_6px_#142042]`}>
-                              <IconComponent size={20} className={`${item.iconColor} ${item.isFeatured ? 'animate-pulse' : ''}`} />
-                            </div>
-                            <div className="text-left flex flex-col">
-                              <span className={`font-bold text-sm sm:text-base uppercase tracking-widest ${item.isFeatured ? 'text-rose-500 dark:text-rose-400 font-black' : 'text-slate-800 dark:text-slate-100'}`}>
-                                {item.title}
-                              </span>
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-tight font-medium">
-                                {item.desc}
-                              </span>
-                            </div>
-                          </div>
-                          <ChevronRight size={16} className={`text-slate-400 dark:text-slate-500 group-hover:translate-x-1 transition-transform ml-2 ${item.isFeatured ? 'text-rose-400' : ''}`} />
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-
-                {/* SEPARATE AND OUTSIDE BOTTOM WRAPPER FOR API PORT, STORAGE, AND DB INFORMATION */}
-                <div 
-                  className={`w-full p-6 rounded-3xl transition-all duration-300 ${
-                    theme === 'light'
-                      ? 'bg-[#e6ebf4] shadow-[12px_12px_24px_#cbd2df,-12px_-12px_24px_#ffffff] border border-white/40'
-                      : 'bg-[#0b1329] shadow-[12px_12px_24px_#030610,-12px_-12px_24px_#142042] border border-[#1e2a4a]/20'
-                  }`}
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* 1. API Status check */}
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-xl flex items-center justify-center bg-[#e6ebf4] dark:bg-[#0b1329] shadow-[inset_3px_3px_6px_#cbd2df,inset_-3px_-3px_6px_#ffffff] dark:shadow-[inset_3px_3px_6px_#030610,inset_-3px_-3px_6px_#122040] ${
-                        apiStatus.isActive
-                          ? 'text-emerald-500'
-                          : 'text-rose-500'
-                      }`}>
-                        {apiStatus.isActive ? (
-                          <ShieldCheck size={20} />
-                        ) : (
-                          <AlertCircle size={20} className="animate-bounce" />
-                        )}
-                      </div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">
-                          CỔNG API / PROXY
-                        </span>
-                        <span className={`text-xs font-semibold leading-normal break-all ${
-                          apiStatus.isActive 
-                            ? 'text-emerald-600 dark:text-emerald-405' 
-                            : 'text-rose-600 dark:text-rose-450 font-bold'
-                        }`}>
-                          {apiStatus.text}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 2. Storage estimate query */}
-                    <div className="flex items-start gap-4 border-t md:border-t-0 md:border-l border-slate-350 dark:border-slate-850/80 pt-4 md:pt-0 md:pl-5">
-                      <div className="p-3 bg-[#e6ebf4] dark:bg-[#0b1329] text-sky-500 rounded-xl shadow-[inset_3px_3px_6px_#cbd2df,inset_-3px_-3px_6px_#ffffff] dark:shadow-[inset_3px_3px_6px_#030610,inset_-3px_-3px_6px_#122040] flex items-center justify-center">
-                        <HardDrive size={20} />
-                      </div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">
-                          DUNG LƯỢNG LƯU TRỮ
-                        </span>
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          {storageUsage}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 3. Database Engine */}
-                    <div className="flex items-start gap-4 border-t md:border-t-0 md:border-l border-slate-350 dark:border-slate-850/80 pt-4 md:pt-0 md:pl-5">
-                      <div className="p-3 bg-[#e6ebf4] dark:bg-[#0b1329] text-purple-500 rounded-xl shadow-[inset_3px_3px_6px_#cbd2df,inset_-3px_-3px_6px_#ffffff] dark:shadow-[inset_3px_3px_6px_#030610,inset_-3px_-3px_6px_#122040] flex items-center justify-center">
-                        <Database size={20} />
-                      </div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">
-                          CƠ SỞ DỮ LIỆU
-                        </span>
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-mono">
-                          IndexedDB <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            );
+                  <IconComponent size={20} className="text-white mr-4" />
+                  <span className="font-bold text-sm uppercase tracking-widest text-white">{item.title}</span>
+                </motion.button>
+              );
+            });
           })()}
         </div>
+
+        {/* Footer info stats */}
+        <div className="mt-8 pt-4 border-t border-white/20 w-full flex flex-col gap-2 opacity-60">
+           <div className="flex items-center gap-3">
+             <ShieldCheck size={16} className="text-white" />
+             <span className="text-[10px] uppercase font-bold tracking-widest text-white break-all">{apiStatus.text}</span>
+           </div>
+           <div className="flex items-center gap-3">
+             <HardDrive size={16} className="text-white" />
+             <span className="text-[10px] uppercase font-bold tracking-widest text-white">{storageUsage}</span>
+           </div>
+           <div className="flex items-center gap-3">
+             <Database size={16} className="text-white" />
+             <span className="text-[10px] uppercase font-bold tracking-widest text-white">IndexedDB {hasSaves ? '(Active)' : ''}</span>
+           </div>
+        </div>
+
       </div>
+        </div>
+
+      
 
       {/* LOAD GAME MODAL */}
+
       <AnimatePresence>
           {showLoadModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-3 md:p-8">

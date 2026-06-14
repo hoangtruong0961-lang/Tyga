@@ -152,7 +152,7 @@ async function generateIncrementalSummaryForSlicedHistory(
   settings: AppSettings
 ): Promise<string | null> {
   if (slicedOutHistory.length === 0) return null;
-  console.log(`[IncrementalSummary] Summarizing ${slicedOutHistory.length} sliced-out messages...`);
+  console.log(`[IncrementalSummary] Summarizing delta of ${slicedOutHistory.length} messages...`);
   try {
     const aiClient = getAiClient(settings);
     const textToSummarize = slicedOutHistory
@@ -160,13 +160,14 @@ async function generateIncrementalSummaryForSlicedHistory(
       .join("\n\n");
 
     const prompt = `Bạn là một trợ lý thông minh phụ trách nén bộ nhớ cốt truyện.
-Hãy viết một bản tóm tắt tích lũy siêu chi tiết, đầy đủ mọi diễn biến quan trọng đã diễn ra trong đoạn hội thoại bị lược bỏ sau đây. Lưu giữ mọi chi tiết nhỏ nhất.
+Nhiệm vụ của bạn là tích lũy diễn biến mới vào bản tóm tắt cốt truyện cũ (nếu có).
+Hãy viết một bản tóm tắt tích lũy siêu chi tiết, đầy đủ mọi diễn biến quan trọng. Lưu giữ mọi chi tiết nhỏ nhất.
 Bản tóm tắt này sẽ đóng vai trò là ký ức bắc cầu (bridge memory) để mô hình chính hiểu sâu sắc chuyện gì đã xảy ra trước đó.
 
-Hội thoại bị lược bỏ:
+${worldSummary ? `Tóm tắt cốt truyện từ trước đến nay:\n${worldSummary}\n\n` : ''}Diễn biến hội thoại mới cập nhật:
 ${textToSummarize}
 
-Yêu cầu: Chỉ trả về đoạn tóm tắt bằng tiếng Việt, rất đầy đủ và chi tiết, không kèm lời giải thích nào khác.`;
+Yêu cầu: Tổng hợp lại toàn bộ thành một đoạn tóm tắt duy nhất bằng tiếng Việt, rất đầy đủ và chi tiết, nối tiếp mạch truyện cũ và mới, không kèm lời giải thích nào khác. Không bỏ sót các sự kiện hoặc nhân vật đã rời đi hoặc xuất hiện.`;
 
     let activeProxy = settings.proxies?.find(
       (p) => p.id === settings.activeProxyId,
@@ -585,19 +586,24 @@ export const gameplayAiService = {
       // --- DYNAMIC AI COMPRESSION ---
       let contextualSummary = undefined;
       if (finalHistoryStartIndex > 0) {
+        let foundSummaryIndex = -1;
         for (let i = finalHistoryStartIndex - 1; i >= 0; i--) {
           if (history[i].incrementalSummary) {
             contextualSummary = history[i].incrementalSummary;
+            foundSummaryIndex = i;
             break;
           }
         }
         
-        if (!contextualSummary) {
+        // If there's a gap between the last summarized message and the new slice boundary,
+        // we MUST update the summary so we don't lose the intermediate events.
+        if (!contextualSummary || foundSummaryIndex < finalHistoryStartIndex - 1) {
           try {
-            const slicedOutHistory = history.slice(0, finalHistoryStartIndex);
+            // We pass the delta that needs to be summarized. If there's an existing summary, we append to it in the system.
+            const messagesToSummarize = history.slice(foundSummaryIndex + 1, finalHistoryStartIndex);
             const bridgedSummary = await generateIncrementalSummaryForSlicedHistory(
-              slicedOutHistory,
-              worldData.summary || "",
+              messagesToSummarize,
+              contextualSummary || worldData.summary || "",
               settings
             );
             if (bridgedSummary) {
@@ -1470,7 +1476,7 @@ Be extremely accurate. ONLY output updates when there is a true change/consequen
 
       // Task 3.3 Step 2: History Slicing & Context Builder (Tầng 3)
       // ST Context Builder: calculate budget and subtract system tokens to find how many history turns can fit
-      const contextBudgetTokens = worldData.config.contextConfig?.maxContextTokens || 60000;
+      const contextBudgetTokens = worldData.config.contextConfig?.maxContextTokens || 1000000;
       
       // Calculate tokens used by current components (rough estimation before assembly)
       const inputTokens = estimateTokens(cleanedInput);
@@ -1512,19 +1518,21 @@ Be extremely accurate. ONLY output updates when there is a true change/consequen
       // --- DYNAMIC AI COMPRESSION ---
       let contextualSummaryStream = undefined;
       if (finalHistoryStartIndex > 0) {
+        let foundSummaryIndex = -1;
         for (let i = finalHistoryStartIndex - 1; i >= 0; i--) {
           if (history[i].incrementalSummary) {
             contextualSummaryStream = history[i].incrementalSummary;
+            foundSummaryIndex = i;
             break;
           }
         }
         
-        if (!contextualSummaryStream) {
+        if (!contextualSummaryStream || foundSummaryIndex < finalHistoryStartIndex - 1) {
           try {
-            const slicedOutHistory = history.slice(0, finalHistoryStartIndex);
+            const slicedOutHistory = history.slice(foundSummaryIndex + 1, finalHistoryStartIndex);
             const bridgedSummary = await generateIncrementalSummaryForSlicedHistory(
               slicedOutHistory,
-              worldData.summary || "",
+              contextualSummaryStream || worldData.summary || "",
               settings
             );
             if (bridgedSummary) {

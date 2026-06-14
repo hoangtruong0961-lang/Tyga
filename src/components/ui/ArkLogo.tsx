@@ -9,72 +9,62 @@ interface ArkLogoProps {
 export const ArkLogo: React.FC<ArkLogoProps> = ({ size = 100, className = '' }) => {
   return (
     <div 
-      className={`${className} relative flex items-center justify-center rounded-full select-none transition-all duration-500`}
+      className={`${className} relative flex items-center justify-center select-none`}
       style={{ 
         width: size, 
         height: size,
       }}
     >
-      {/* Outer Neumorphic Extruded Circle (Embossed Plate) */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#eae7e4] to-[#c3beba] dark:from-[#0e182e] dark:to-[#04060c] shadow-[6px_6px_14px_rgba(176,171,168,0.75),-6px_-6px_14px_rgba(255,255,255,0.95)] dark:shadow-[8px_8px_18px_rgba(1,3,7,0.9),-8px_-8px_18px_rgba(21,33,59,0.8)] border border-white/40 dark:border-white/5" />
+      {/* Deep Glow Behind Logo */}
+      <motion.div 
+        className="absolute inset-0 rounded-full bg-cyan-500/20 blur-[20px]"
+        animate={{ opacity: [0.5, 0.8, 0.5], scale: [0.8, 1.2, 0.8] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      />
+      
+      {/* Outer Tech Ring */}
+      <motion.div 
+        className="absolute inset-0 rounded-full border border-sky-500/30 border-t-sky-400 border-b-cyan-600 shadow-[0_0_15px_rgba(56,189,248,0.5)_inset]"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+      />
 
-      {/* Inner Neumorphic Recessed Circle (Sunken Plate) */}
-      <div className="absolute w-[80%] h-[80%] rounded-full bg-gradient-to-br from-[#c3beba] to-[#eae7e4] dark:from-[#03050a] dark:to-[#101c34] shadow-[inset_4px_4px_8px_rgba(176,171,168,0.75),inset_-4px_-4px_8px_rgba(255,255,255,0.95)] dark:shadow-[inset_4px_4px_10px_rgba(1,3,7,0.9),inset_-4px_-4px_10px_rgba(21,33,59,0.8)] border border-black/5 dark:border-white/5 flex items-center justify-center overflow-hidden">
+      {/* Inner Dashed Ring */}
+      <motion.div 
+        className="absolute w-[80%] h-[80%] rounded-full border-2 border-dashed border-cyan-400/50"
+        animate={{ rotate: -360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      />
+
+      {/* Center Core Glow */}
+      <div className="absolute w-[60%] h-[60%] rounded-full bg-gradient-to-br from-cyan-300 via-sky-500 to-blue-700 shadow-[0_0_20px_rgba(56,189,248,0.8)] flex items-center justify-center overflow-hidden">
         
-        {/* Subtle radial sheen overlay for material feel */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.25),transparent_60%)] dark:bg-[radial-gradient(circle_at_30%_30%,rgba(56,189,248,0.06),transparent_60%)]" />
+        {/* Core Pulsing Sheen */}
+        <motion.div 
+          className="absolute inset-0 bg-white/30"
+          animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+        />
 
-        {/* Minimalist Logo Symbol (Sleek minimalist Ark ship + Sun combination) */}
+        {/* The 'A' / Ship Motif */}
         <motion.svg
-          width="52%"
-          height="52%"
+          width="60%"
+          height="60%"
           viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="relative z-10 text-sky-500 dark:text-sky-400"
-          animate={{
-            scale: [1, 1.05, 1],
-            opacity: [0.9, 1, 0.9],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          className="relative z-10 text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.9)]"
         >
-          {/* Minimalist Sun disc in the center-top */}
-          <circle 
-            cx="50" 
-            cy="40" 
-            r="13" 
-            className="fill-sky-500/10 dark:fill-sky-400/15 stroke-sky-500 dark:stroke-sky-400" 
-            strokeWidth="2.5" 
-          />
-          
-          {/* Subtle sunrays as minimalist anchors */}
-          <line x1="50" y1="18" x2="50" y2="23" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="27" y1="40" x2="32" y2="40" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="73" y1="40" x2="68" y2="40" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="34" y1="24" x2="38" y2="28" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="66" y1="24" x2="62" y2="28" className="stroke-sky-500 dark:stroke-sky-400" strokeWidth="2.5" strokeLinecap="round" />
-
-          {/* Minimalist geometric crescent shape representing the ARK */}
+          {/* Futuristic Ship or A shape */}
           <path
-            d="M20 62C20 62 35 73 50 73C65 73 80 62 80 62C80 62 65 67 50 67C35 67 20 62 20 62Z"
-            className="fill-sky-500 dark:fill-sky-400 stroke-sky-500 dark:stroke-sky-400"
-            strokeWidth="1.5"
-            strokeLinejoin="round"
+            d="M50 15L20 75L35 75L50 45L65 75L80 75L50 15Z"
+            className="fill-white"
           />
-
-          {/* Symmetrical support line anchor below the ship */}
-          <path
-            d="M32 78H68"
-            className="stroke-sky-500/60 dark:stroke-sky-400/50"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
+          {/* Subtle accent beam */}
+          <line x1="50" y1="40" x2="50" y2="85" stroke="currentColor" strokeWidth="4" />
         </motion.svg>
       </div>
+
     </div>
   );
 };
