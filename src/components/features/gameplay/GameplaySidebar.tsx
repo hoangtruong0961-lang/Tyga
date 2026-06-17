@@ -533,8 +533,8 @@ export const GameplaySidebar: React.FC<GameplaySidebarProps> = ({
                     </button>
                 </div>
                 <button onClick={() => setShowStoryDebugModal(true)} className="w-full h-9 flex items-center justify-center gap-1.5 p-1 px-4 text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 neu-btn rounded-xl transition-all group text-[10.5px] font-black uppercase tracking-wider border-none">
-                    <Bug className="text-cyan-600 dark:text-cyan-400 animate-pulse" size={12}/>
-                    <span className="text-cyan-700 dark:text-cyan-400">AI Gỡ Lỗi Chính Văn</span>
+                    <Sparkles className="text-cyan-600 dark:text-cyan-400 animate-pulse" size={12}/>
+                    <span className="text-cyan-700 dark:text-cyan-400">AI Trợ Lý</span>
                 </button>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-1 space-y-2">

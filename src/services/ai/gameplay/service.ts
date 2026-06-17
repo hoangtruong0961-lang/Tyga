@@ -771,17 +771,14 @@ export const gameplayAiService = {
 
       const hasReasoningEffort = reasoningEffort && reasoningEffort !== "none" && reasoningEffort !== "";
 
-      if ((thinkingBudget >= 1024 || hasReasoningEffort) && isGeminiThinkingModel) {
+      if ((thinkingBudget >= 1024) && isGeminiThinkingModel) {
         const tConfig: any = {};
-        if (thinkingBudget >= 1024) tConfig.thinkingBudgetTokens = thinkingBudget;
-        if (hasReasoningEffort) {
-          tConfig.reasoningEffort = reasoningEffort === "auto" ? undefined : reasoningEffort;
-        }
+        if (thinkingBudget >= 1024) tConfig.thinkingBudget = thinkingBudget;
         
         generationConfig.thinkingConfig = Object.keys(tConfig).length > 0 ? tConfig : undefined;
       } else if (thinkingBudget > 0 && isOtherThinkingModel) {
         Object.defineProperty(generationConfig, "thinkingConfig", {
-          value: { thinkingBudgetTokens: thinkingBudget },
+          value: { thinkingBudget: thinkingBudget },
           enumerable: false,
         });
       }
@@ -1731,17 +1728,14 @@ Be extremely accurate. ONLY output updates when there is a true change/consequen
 
       const hasReasoningEffort = reasoningEffort && reasoningEffort !== "none" && reasoningEffort !== "";
 
-      if ((thinkingBudget >= 1024 || hasReasoningEffort) && isGeminiThinkingModel) {
+      if ((thinkingBudget >= 1024) && isGeminiThinkingModel) {
         const tConfig: any = {};
-        if (thinkingBudget >= 1024) tConfig.thinkingBudgetTokens = thinkingBudget;
-        if (hasReasoningEffort) {
-          tConfig.reasoningEffort = reasoningEffort === "auto" ? undefined : reasoningEffort;
-        }
+        if (thinkingBudget >= 1024) tConfig.thinkingBudget = thinkingBudget;
         
         generationConfig.thinkingConfig = Object.keys(tConfig).length > 0 ? tConfig : undefined;
       } else if (thinkingBudget > 0 && isOtherThinkingModel) {
         Object.defineProperty(generationConfig, "thinkingConfig", {
-          value: { thinkingBudgetTokens: thinkingBudget },
+          value: { thinkingBudget: thinkingBudget },
           enumerable: false,
         });
       }

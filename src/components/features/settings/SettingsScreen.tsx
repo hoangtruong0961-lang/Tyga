@@ -682,7 +682,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
       model: "deepseek-chat",
       models: [
         "deepseek-chat",
-        "deepseek-reasoner"
+        "deepseek-reasoner",
+        "deepseek-v4-pro"
       ],
       isActive: true,
       type: "deepseek"

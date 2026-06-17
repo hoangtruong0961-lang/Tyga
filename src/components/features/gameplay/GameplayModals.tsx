@@ -13,6 +13,7 @@ import { LsrTableDefinition } from '../../../services/lsr/LsrParser';
 import { SchedulePlannerModal } from './modals/SchedulePlannerModal';
 import { FateSettingsModal, FateSettings } from './modals/FateSettingsModal';
 import { FateRollOverlayModal } from './modals/FateRollOverlayModal';
+import { AIAssistantModal } from './modals/AIAssistantModal';
 
 const EntityDetailModal: React.FC<{
     entity: Entity | null;
@@ -418,6 +419,20 @@ export const GameplayModals: React.FC<GameplayModalsProps> = (props) => {
                 actionText={props.pendingActionText}
                 onAcceptFate={(finalPrompt) => props.handleSend(finalPrompt, true)}
             />
+
+            {/* AI ASSISTANT MODAL (Replaces Story Debug Modal) */}
+            <AnimatePresence>
+                {props.showStoryDebugModal && (
+                    <AIAssistantModal
+                        isOpen={props.showStoryDebugModal}
+                        onClose={() => props.setShowStoryDebugModal(false)}
+                        activeWorld={props.activeWorld}
+                        onUpdateWorld={props.onUpdateWorld}
+                        settings={props.settings}
+                        history={props.history}
+                    />
+                )}
+            </AnimatePresence>
         </>
     );
 };

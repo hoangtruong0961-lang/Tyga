@@ -330,12 +330,17 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
             body.max_tokens = 16384; 
           }
 
-          const isDeepSeekThinking = lowerModel.includes('deepseek-r1') || lowerModel.includes('deepseek-reasoner');
+          const isDeepSeekThinking = lowerModel.includes('deepseek-r1') || lowerModel.includes('deepseek-reasoner') || lowerModel.includes('deepseek-v4');
           if (isDeepSeekThinking) {
             delete body.temperature;
             delete body.top_p;
             delete body.frequency_penalty;
             delete body.presence_penalty;
+          }
+
+          if (lowerModel.includes('deepseek-v4')) {
+            body.reasoning_effort = "high";
+            body.thinking = { type: "enabled" };
           }
 
           if (config?.responseMimeType === 'application/json') {
@@ -513,12 +518,17 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
             body.max_tokens = 16384; 
           }
 
-          const isDeepSeekThinking = lowerModel.includes('deepseek-r1') || lowerModel.includes('deepseek-reasoner');
+          const isDeepSeekThinking = lowerModel.includes('deepseek-r1') || lowerModel.includes('deepseek-reasoner') || lowerModel.includes('deepseek-v4');
           if (isDeepSeekThinking) {
             delete body.temperature;
             delete body.top_p;
             delete body.frequency_penalty;
             delete body.presence_penalty;
+          }
+
+          if (lowerModel.includes('deepseek-v4')) {
+            body.reasoning_effort = "high";
+            body.thinking = { type: "enabled" };
           }
 
           if (config?.responseMimeType === 'application/json') {
@@ -851,8 +861,8 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
         delete newConfig.presencePenalty;
         delete newConfig.frequencyPenalty;
         
-        // thinkingBudgetTokens phải >= 1024
-        if (newConfig.thinkingConfig?.thinkingBudgetTokens && newConfig.thinkingConfig.thinkingBudgetTokens < 1024) {
+        // thinkingBudget phải >= 1024
+        if (newConfig.thinkingConfig?.thinkingBudget && newConfig.thinkingConfig.thinkingBudget < 1024) {
              delete newConfig.thinkingConfig; // Hủy cấu hình nếu budget < 1024 để tránh lỗi API
         }
     } else {
