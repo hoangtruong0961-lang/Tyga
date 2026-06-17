@@ -563,6 +563,30 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
           if (response.ok) return await response.json();
           return null;
         } catch (e) {
+          // If direct fetch fails, try via our backend proxy
+          try {
+            const proxyHeaders = { ...headers };
+            if (isOpenAI && !useGoogleKey) proxyHeaders['Authorization'] = `Bearer ${key}`;
+            const reqUrl = (!isOpenAI && key && !fetchUrl.includes('key=')) 
+               ? `${fetchUrl}${fetchUrl.includes('?') ? '&' : '?'}key=${key}`
+               : fetchUrl;
+               
+            const proxyRes = await fetch('/api/ai/proxy', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-ark-client': 'ark-v2-client'
+              },
+              body: JSON.stringify({
+                url: reqUrl,
+                method: 'GET',
+                headers: proxyHeaders
+              })
+            });
+            if (proxyRes.ok) return await proxyRes.json();
+          } catch(err2) {
+             // Let it fail
+          }
           return null;
         }
       };

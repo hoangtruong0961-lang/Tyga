@@ -310,8 +310,15 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
 
           rawMessages.forEach((msg: any) => messages.push(msg));
 
+          let requestedModel = activeProxy?.model || model || settings?.aiModel || "gemini-3.1-pro-preview";
+          
+          if (isDeepSeek && (requestedModel.includes('deepseek-v4') || requestedModel === 'deepseek-v4-pro' || requestedModel === 'deepseek-v4-flash')) {
+             // Forced map for deepseek valid chat completions models
+             requestedModel = "deepseek-chat";
+          }
+
           const body: any = {
-            model: activeProxy?.model || model || settings?.aiModel || "gemini-3.1-pro-preview",
+            model: requestedModel,
             messages: messages,
             temperature: config?.temperature ?? settings?.temperature ?? 1.0,
             max_tokens: config?.maxOutputTokens || 4096,
@@ -497,8 +504,14 @@ export const getAiClient = (settings?: AppSettings, forceDirect: boolean = false
 
           rawMessages.forEach((msg: any) => messages.push(msg));
 
+          let requestedModelStr = activeProxy?.model || model || settings?.aiModel || "gemini-3.1-pro-preview";
+          
+          if (isDeepSeek && (requestedModelStr.includes('deepseek-v4') || requestedModelStr === 'deepseek-v4-pro' || requestedModelStr === 'deepseek-v4-flash')) {
+             requestedModelStr = "deepseek-chat";
+          }
+
           const body: any = {
-            model: activeProxy?.model || model || settings?.aiModel || "gemini-3.1-pro-preview",
+            model: requestedModelStr,
             messages: messages,
             temperature: config?.temperature ?? settings?.temperature ?? 0.7,
             max_tokens: config?.maxOutputTokens || 4096,
