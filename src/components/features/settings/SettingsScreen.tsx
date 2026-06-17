@@ -538,7 +538,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, fromGame, i
     const loadFromProxy = async (url: string, key: string, currentModel: string, type?: string) => {
       // Normalize URL: remove trailing slash
       const baseUrl = url.replace(/\/$/, '');
-      const isOpenAI = type === 'openai' || type === 'openrouter' || baseUrl.toLowerCase().includes('/v1') || baseUrl.toLowerCase().includes('openrouter.ai') || baseUrl.toLowerCase().includes('groq.com');
+      const isOpenAI = type === 'openai' || type === 'openrouter' || type === 'deepseek' || baseUrl.toLowerCase().includes('/v1') || baseUrl.toLowerCase().includes('openrouter.ai') || baseUrl.toLowerCase().includes('groq.com');
       
       const tryFetch = async (fetchUrl: string, useGoogleKey: boolean = false) => {
         try {
